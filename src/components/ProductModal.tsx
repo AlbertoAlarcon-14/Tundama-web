@@ -1,6 +1,11 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { Minus, Plus, X } from "lucide-react";
-import type { Product, ProductSize } from "@/data/products";
+import {
+  products,
+  type Product,
+  type ProductSize,
+} from "@/data/products";
 import { addons } from "@/data/addons";
 import { formatCOP } from "@/data/config";
 import { ProductImage } from "./ProductImage";
@@ -8,6 +13,11 @@ import { ProductImage } from "./ProductImage";
 interface SelectedAddon {
   id: string;
   quantity: number;
+}
+
+interface SelectedFlavors {
+  firstFlavorId: string;
+  secondFlavorId: string;
 }
 
 interface Props {
@@ -18,6 +28,7 @@ interface Props {
     quantity: number,
     size?: ProductSize,
     selectedAddons?: SelectedAddon[],
+    selectedFlavors?: SelectedFlavors,
   ) => void;
 }
 
@@ -27,15 +38,42 @@ export function ProductModal({
   onAdd,
 }: Props) {
   const [quantity, setQuantity] = useState(1);
+
   const [selectedSize, setSelectedSize] =
     useState<ProductSize | null>(null);
+
   const [selectedAddons, setSelectedAddons] =
     useState<SelectedAddon[]>([]);
+
+  const [firstFlavor, setFirstFlavor] =
+    useState<Product | null>(null);
+
+  const [secondFlavor, setSecondFlavor] =
+    useState<Product | null>(null);
 
   useEffect(() => {
     setQuantity(1);
     setSelectedSize(product?.sizes?.[0] ?? null);
     setSelectedAddons([]);
+
+    if (product?.category === "pizzas") {
+      const availablePizzas = products.filter(
+        (item) =>
+          item.category === "pizzas" &&
+          item.available,
+      );
+
+      setFirstFlavor(product);
+
+      setSecondFlavor(
+        availablePizzas.find(
+          (item) => item.id !== product.id,
+        ) ?? null,
+      );
+    } else {
+      setFirstFlavor(null);
+      setSecondFlavor(null);
+    }
   }, [product]);
 
   useEffect(() => {
@@ -56,12 +94,6 @@ export function ProductModal({
     };
   }, [product, onClose]);
 
-  /*
-   * IMPORTANTE:
-   * Este useMemo debe ejecutarse antes del return null.
-   * Así React mantiene el mismo orden de hooks
-   * aunque product sea null.
-   */
   const productAddons = useMemo(() => {
     if (!product?.addonIds?.length) {
       return [];
@@ -79,6 +111,18 @@ export function ProductModal({
   }
 
   const hasSizes = !!product.sizes?.length;
+
+  const isPizza = product.category === "pizzas";
+
+  const isMediumPizza =
+    isPizza &&
+    selectedSize?.name === "Mediana 32cm";
+
+  const availablePizzas = products.filter(
+    (item) =>
+      item.category === "pizzas" &&
+      item.available,
+  );
 
   const finalPrice =
     selectedSize?.price ?? product.price;
@@ -102,11 +146,14 @@ export function ProductModal({
   );
 
   const unitTotal = finalPrice + addonsTotal;
-
   const totalPrice = unitTotal * quantity;
 
   const canAdd =
-    !hasSizes || selectedSize !== null;
+    (!hasSizes || selectedSize !== null) &&
+    (!isMediumPizza ||
+      (!!firstFlavor &&
+        !!secondFlavor &&
+        firstFlavor.id !== secondFlavor.id));
 
   function getAddonQuantity(addonId: string) {
     return (
@@ -185,10 +232,7 @@ export function ProductModal({
             aria-label="Cerrar"
             className="absolute top-3 right-3 grid h-10 w-10 place-items-center rounded-full bg-background/80 text-foreground transition-colors hover:bg-primary"
           >
-            <X
-              className="h-5 w-5"
-              aria-hidden
-            />
+            <X className="h-5 w-5" aria-hidden />
           </button>
         </div>
 
@@ -214,8 +258,7 @@ export function ProductModal({
               <div className="grid gap-2">
                 {product.sizes!.map((size) => {
                   const checked =
-                    selectedSize?.name ===
-                    size.name;
+                    selectedSize?.name === size.name;
 
                   return (
                     <label
@@ -257,6 +300,83 @@ export function ProductModal({
             </p>
           )}
 
+          {/* Sabores para pizza mediana */}
+          {isMediumPizza && (
+            <fieldset className="space-y-3">
+              <legend className="font-display text-xl tracking-wide">
+                Elige los dos sabores
+              </legend>
+
+              <p className="text-sm text-muted-foreground">
+                Combina dos pizzas diferentes en una sola
+                mediana, sin costo adicional.
+              </p>
+
+              <div className="space-y-2">
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium">
+                    Primer sabor
+                  </span>
+
+                  <select
+                    value={firstFlavor?.id ?? ""}
+                    onChange={(e) =>
+                      setFirstFlavor(
+                        availablePizzas.find(
+                          (item) =>
+                            item.id === e.target.value,
+                        ) ?? null,
+                      )
+                    }
+                    className="w-full rounded-md border border-border bg-surface-2 p-3"
+                  >
+                    {availablePizzas.map((flavor) => (
+                      <option
+                        key={flavor.id}
+                        value={flavor.id}
+                      >
+                        {flavor.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium">
+                    Segundo sabor
+                  </span>
+
+                  <select
+                    value={secondFlavor?.id ?? ""}
+                    onChange={(e) =>
+                      setSecondFlavor(
+                        availablePizzas.find(
+                          (item) =>
+                            item.id === e.target.value,
+                        ) ?? null,
+                      )
+                    }
+                    className="w-full rounded-md border border-border bg-surface-2 p-3"
+                  >
+                    {availablePizzas
+                      .filter(
+                        (item) =>
+                          item.id !== firstFlavor?.id,
+                      )
+                      .map((flavor) => (
+                        <option
+                          key={flavor.id}
+                          value={flavor.id}
+                        >
+                          {flavor.name}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              </div>
+            </fieldset>
+          )}
+
           {/* Precio base seleccionado */}
           {hasSizes && selectedSize && (
             <div className="flex items-center justify-between border-b border-border pb-4">
@@ -270,7 +390,7 @@ export function ProductModal({
             </div>
           )}
 
-          {/* ADICIONALES */}
+          {/* Adicionales */}
           {productAddons.length > 0 && (
             <fieldset className="space-y-3">
               <legend className="font-display text-xl tracking-wide">
@@ -307,14 +427,9 @@ export function ProductModal({
                           type="button"
                           aria-label={`Disminuir ${addon.name}`}
                           onClick={() =>
-                            updateAddonQuantity(
-                              addon.id,
-                              -1,
-                            )
+                            updateAddonQuantity(addon.id, -1)
                           }
-                          disabled={
-                            addonQuantity === 0
-                          }
+                          disabled={addonQuantity === 0}
                           className="grid h-9 w-9 place-items-center rounded transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           <Minus
@@ -334,10 +449,7 @@ export function ProductModal({
                           type="button"
                           aria-label={`Aumentar ${addon.name}`}
                           onClick={() =>
-                            updateAddonQuantity(
-                              addon.id,
-                              1,
-                            )
+                            updateAddonQuantity(addon.id, 1)
                           }
                           className="grid h-9 w-9 place-items-center rounded transition-colors hover:bg-surface-2"
                         >
@@ -396,16 +508,11 @@ export function ProductModal({
                 type="button"
                 aria-label="Disminuir cantidad"
                 onClick={() =>
-                  setQuantity((q) =>
-                    Math.max(1, q - 1),
-                  )
+                  setQuantity((q) => Math.max(1, q - 1))
                 }
                 className="grid h-10 w-10 place-items-center rounded hover:bg-background"
               >
-                <Minus
-                  className="h-4 w-4"
-                  aria-hidden
-                />
+                <Minus className="h-4 w-4" aria-hidden />
               </button>
 
               <span
@@ -418,15 +525,10 @@ export function ProductModal({
               <button
                 type="button"
                 aria-label="Aumentar cantidad"
-                onClick={() =>
-                  setQuantity((q) => q + 1)
-                }
+                onClick={() => setQuantity((q) => q + 1)}
                 className="grid h-10 w-10 place-items-center rounded hover:bg-background"
               >
-                <Plus
-                  className="h-4 w-4"
-                  aria-hidden
-                />
+                <Plus className="h-4 w-4" aria-hidden />
               </button>
             </div>
 
@@ -439,6 +541,12 @@ export function ProductModal({
                   quantity,
                   selectedSize ?? undefined,
                   selectedAddons,
+                  isMediumPizza
+                    ? {
+                        firstFlavorId: firstFlavor?.id ?? "",
+                        secondFlavorId: secondFlavor?.id ?? "",
+                      }
+                    : undefined,
                 );
 
                 onClose();

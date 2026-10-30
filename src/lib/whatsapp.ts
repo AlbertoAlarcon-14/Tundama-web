@@ -1,3 +1,4 @@
+
 import { formatCOP, siteConfig } from "@/data/config";
 import type { Product, ProductSize } from "@/data/products";
 
@@ -15,6 +16,15 @@ interface Line {
   size?: ProductSize;
   quantity: number;
   subtotal: number;
+
+  // Sabores seleccionados para pizzas de dos sabores
+  firstFlavor?: {
+    name: string;
+  };
+
+  secondFlavor?: {
+    name: string;
+  };
 
   // Adicionales seleccionados para este producto
   selectedAddons?: {
@@ -40,6 +50,15 @@ export function buildOrderMessage(
     const productLine =
       `• ${i.product.name}${sizeLabel} x${i.quantity} — ${formatCOP(i.subtotal)}`;
 
+    // Sabores seleccionados
+    const flavorLines =
+      i.firstFlavor && i.secondFlavor
+        ? [
+            `  Primer sabor: ${i.firstFlavor.name}`,
+            `  Segundo sabor: ${i.secondFlavor.name}`,
+          ]
+        : [];
+
     // Líneas de adicionales
     const addonLines =
       i.selectedAddons &&
@@ -58,6 +77,7 @@ export function buildOrderMessage(
 
     return [
       productLine,
+      ...flavorLines,
       ...addonLines,
     ];
   });

@@ -1,3 +1,4 @@
+
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Minus, Plus, Trash2, MessageCircle } from "lucide-react";
@@ -51,17 +52,24 @@ function CartPage() {
   function send() {
     setTouched(true);
     if (!canSend) return;
+
     const message = buildOrderMessage(items, total, data);
     window.open(whatsappUrl(message), "_blank", "noopener,noreferrer");
   }
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      <SectionHeading as="h1" title="TU PEDIDO" subtitle="Revisa los productos y envíalos por WhatsApp." />
+      <SectionHeading
+        as="h1"
+        title="TU PEDIDO"
+        subtitle="Revisa los productos y envíalos por WhatsApp."
+      />
 
       {items.length === 0 ? (
         <div className="card-surface rounded-xl p-10 text-center">
-          <h2 className="font-display text-3xl tracking-wide">TU CARRITO ESTÁ VACÍO</h2>
+          <h2 className="font-display text-3xl tracking-wide">
+            TU CARRITO ESTÁ VACÍO
+          </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Agrega tus favoritos desde el menú y vuelve aquí para pedir.
           </p>
@@ -76,18 +84,59 @@ function CartPage() {
         <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
           <ul className="space-y-3">
             {items.map((i) => (
-              <li key={i.id} className="card-surface flex gap-3 rounded-xl p-3">
+              <li
+                key={i.id}
+                className="card-surface flex gap-3 rounded-xl p-3"
+              >
                 <div className="h-24 w-24 shrink-0 overflow-hidden rounded-md">
-                  <ProductImage src={i.product.image} alt={i.product.name} label={i.product.name} />
+                  <ProductImage
+                    src={i.product.image}
+                    alt={i.product.name}
+                    label={i.product.name}
+                  />
                 </div>
+
                 <div className="flex min-w-0 flex-1 flex-col">
                   <h2 className="font-display text-xl tracking-wide">
                     {i.product.name}
                     {i.size ? ` — ${i.size.name}` : ""}
                   </h2>
-                  <span className="text-sm text-muted-foreground">
+
+                  {i.firstFlavor && i.secondFlavor && (
+                    <div className="mt-1 text-sm text-muted-foreground">
+                      <p>
+                        <span className="font-semibold text-foreground">
+                          Primer sabor:
+                        </span>{" "}
+                        {i.firstFlavor.name}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-foreground">
+                          Segundo sabor:
+                        </span>{" "}
+                        {i.secondFlavor.name}
+                      </p>
+                    </div>
+                  )}
+
+                  <span className="mt-1 text-sm text-muted-foreground">
                     {formatCOP(i.unitPrice)} c/u
                   </span>
+
+                  {i.selectedAddons.length > 0 && (
+                    <div className="mt-1 text-sm text-muted-foreground">
+                      <p className="font-semibold text-foreground">
+                        Adicionales:
+                      </p>
+                      {i.selectedAddons.map((selectedAddon) => (
+                        <p key={selectedAddon.addon.id}>
+                          + {selectedAddon.addon.name} x
+                          {selectedAddon.quantity}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="mt-auto flex items-center justify-between gap-2 pt-2">
                     <div className="flex items-center gap-1">
                       <button
@@ -98,7 +147,11 @@ function CartPage() {
                       >
                         <Minus className="h-4 w-4" aria-hidden />
                       </button>
-                      <span className="w-8 text-center font-bold">{i.quantity}</span>
+
+                      <span className="w-8 text-center font-bold">
+                        {i.quantity}
+                      </span>
+
                       <button
                         type="button"
                         aria-label={`Agregar una unidad de ${i.product.name}`}
@@ -107,6 +160,7 @@ function CartPage() {
                       >
                         <Plus className="h-4 w-4" aria-hidden />
                       </button>
+
                       <button
                         type="button"
                         aria-label={`Eliminar ${i.product.name}`}
@@ -116,6 +170,7 @@ function CartPage() {
                         <Trash2 className="h-4 w-4" aria-hidden />
                       </button>
                     </div>
+
                     <span className="font-display text-xl text-primary">
                       {formatCOP(i.subtotal)}
                     </span>
@@ -123,6 +178,7 @@ function CartPage() {
                 </div>
               </li>
             ))}
+
             <li>
               <button
                 type="button"
@@ -135,54 +191,80 @@ function CartPage() {
           </ul>
 
           <div className="card-surface h-fit rounded-xl p-5">
-            <h2 className="font-display text-2xl tracking-wide">DATOS DE ENTREGA</h2>
+            <h2 className="font-display text-2xl tracking-wide">
+              DATOS DE ENTREGA
+            </h2>
             <span className="brush-rule mt-2 !w-12" aria-hidden />
 
             <div className="mt-4 space-y-3">
               <div>
-                <label className={label} htmlFor="name">Nombre *</label>
+                <label className={label} htmlFor="name">
+                  Nombre *
+                </label>
                 <input
                   id="name"
                   className={`${field} mt-1`}
                   value={data.name}
-                  onChange={(e) => setData({ ...data, name: e.target.value })}
+                  onChange={(e) =>
+                    setData({ ...data, name: e.target.value })
+                  }
                 />
               </div>
+
               <div>
-                <label className={label} htmlFor="phone">Teléfono *</label>
+                <label className={label} htmlFor="phone">
+                  Teléfono *
+                </label>
                 <input
                   id="phone"
                   inputMode="tel"
                   className={`${field} mt-1`}
                   value={data.phone}
-                  onChange={(e) => setData({ ...data, phone: e.target.value })}
+                  onChange={(e) =>
+                    setData({ ...data, phone: e.target.value })
+                  }
                 />
               </div>
+
               <div>
-                <label className={label} htmlFor="address">Dirección *</label>
+                <label className={label} htmlFor="address">
+                  Dirección *
+                </label>
                 <input
                   id="address"
                   className={`${field} mt-1`}
                   value={data.address}
-                  onChange={(e) => setData({ ...data, address: e.target.value })}
+                  onChange={(e) =>
+                    setData({ ...data, address: e.target.value })
+                  }
                 />
               </div>
+
               <div>
-                <label className={label} htmlFor="neighborhood">Barrio *</label>
+                <label className={label} htmlFor="neighborhood">
+                  Barrio *
+                </label>
                 <input
                   id="neighborhood"
                   className={`${field} mt-1`}
                   value={data.neighborhood}
-                  onChange={(e) => setData({ ...data, neighborhood: e.target.value })}
+                  onChange={(e) =>
+                    setData({ ...data, neighborhood: e.target.value })
+                  }
                 />
               </div>
+
               <div>
-                <label className={label} htmlFor="payment">Medio de pago</label>
+                <label className={label} htmlFor="payment">
+                  Medio de pago
+                </label>
                 <select
                   id="payment"
                   className={`${field} mt-1`}
                   value={data.payment}
-                  onChange={(e) => setData({ ...data, payment: e.target.value })}
+                  onChange={(e) =>
+                    setData({ ...data, payment: e.target.value })
+                  }
                 >
                   <option>Efectivo</option>
                   <option>Nequi</option>
@@ -190,28 +272,40 @@ function CartPage() {
                   <option>Transferencia</option>
                 </select>
               </div>
+
               <div>
-                <label className={label} htmlFor="notes">Indicaciones</label>
+                <label className={label} htmlFor="notes">
+                  Indicaciones
+                </label>
                 <textarea
                   id="notes"
                   rows={3}
                   className="mt-1 w-full rounded-md border border-border bg-surface p-3 text-sm text-foreground outline-none focus:border-primary"
                   value={data.notes}
-                  onChange={(e) => setData({ ...data, notes: e.target.value })}
+                  onChange={(e) =>
+                    setData({ ...data, notes: e.target.value })
+                  }
                 />
               </div>
             </div>
 
             <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
-              <span className="text-sm tracking-widest text-muted-foreground uppercase">Subtotal</span>
-              <span className="font-display text-3xl text-primary">{formatCOP(total)}</span>
+              <span className="text-sm tracking-widest text-muted-foreground uppercase">
+                Subtotal
+              </span>
+              <span className="font-display text-3xl text-primary">
+                {formatCOP(total)}
+              </span>
             </div>
+
             <p className="mt-1 text-xs text-muted-foreground">
               El valor del domicilio se confirma por WhatsApp.
             </p>
 
             {touched && missing.length > 0 && (
-              <p className="mt-3 text-sm text-primary">Completa los campos marcados con *.</p>
+              <p className="mt-3 text-sm text-primary">
+                Completa los campos marcados con *.
+              </p>
             )}
 
             <button
@@ -223,9 +317,11 @@ function CartPage() {
               <MessageCircle className="h-5 w-5" aria-hidden />
               ENVIAR PEDIDO POR WHATSAPP
             </button>
+
             {!isWhatsappConfigured && (
               <p className="mt-3 text-xs text-muted-foreground">
-                Falta configurar el número de WhatsApp de {siteConfig.shortName}.
+                Falta configurar el número de WhatsApp de{" "}
+                {siteConfig.shortName}.
               </p>
             )}
           </div>

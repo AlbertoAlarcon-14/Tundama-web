@@ -81,7 +81,7 @@ import bretañaImage from "../assets/acompañamientos/bretaña.jpeg"
 import coca400Image from "../assets/acompañamientos/coca400.jpeg"
 import coca1500Image from "../assets/acompañamientos/coca1.5.webp"
 import quatroImage from "../assets/acompañamientos/quatro.jpeg"
-import colombianaImage from "../assets/acompañamientos/colombiana.webp"
+import quatro15 from "../assets/acompañamientos/quatro1.5.jpg"
 import cocaZero400Image from "../assets/acompañamientos/cocazero.jpeg"
 
 export type CategoryId =
@@ -439,6 +439,68 @@ export const products: Product[] = [
     "queso",
   ],
   image:pizzaMargaritaImage,
+  featured: true,
+  available: true,
+},
+{
+  id: "pizza-tres-quesos",
+  name: "Pizza Tres Quesos",
+  category: "pizzas",
+  description:
+    "queso mozzarella, queso gouda, queso azul y salsa napolitana.",
+  price: 22000,
+  sizes: [
+    {
+      name: "Personal 22cm",
+      price: 22000,
+    },
+    {
+      name: "Mediana 32cm",
+      price: 38000,
+    },
+  ],
+  addonIds: [
+    "papas-fritas",
+    "pepinillos",
+    "jalapenos",
+    "carne-mechada",
+    "pollo-mechado",
+    "jamon",
+    "tocineta",
+    "queso",
+  ],
+  image: pizzaPepperoniImage,
+  featured: true,
+  available: true,
+},
+{
+  id: "pizza-tropical",
+  name: "Pizza Tropical",
+  category: "pizzas",
+  description:
+    "piña en almibar, cereza, durazno, ciruela, queso mozzarella y salsa napolitana.",
+  price: 22000,
+  sizes: [
+    {
+      name: "Personal 22cm",
+      price: 23000,
+    },
+    {
+      name: "Mediana 32cm",
+      price: 42000,
+    },
+  ],
+  addonIds: [
+    "papas-fritas",
+    "pepinillos",
+    "jalapenos",
+    "carne-mechada",
+    "pollo-mechado",
+    "jamon",
+    "tocineta",
+    "queso",
+  ],
+  image: pizzaPepperoniImage,
   featured: true,
   available: true,
 },
@@ -901,7 +963,7 @@ export const products: Product[] = [
     name: "Sushi Hot Dog",
     category: "sushi",
     description: "Rollo de sushi (Pan) Queso crema, palmito kanikama, pepino tempura, láminas de manzana y salsa de la casa.",
-    price: 38000,
+    price: 25000,
     image: perrosushiImage,
     featured: false,
     available: true,
@@ -1421,18 +1483,8 @@ export const products: Product[] = [
   name: "Quatro 400ml",
   category: "acompanamientos",
   description: "Refresco de Quatro de 400ml",
-  price: 3000,
+  price: 5000,
   image: quatroImage,
-  featured: true,
-  available: true,
-},
-{
-  id: "acompanamiento-bretaña-400ml",
-  name: "Bretaña 400ml",
-  category: "acompanamientos",
-  description: "Refresco de Bretaña de 400ml",
-  price: 3000,
-  image: bretañaImage,
   featured: true,
   available: true,
 },
@@ -1447,12 +1499,12 @@ export const products: Product[] = [
   available: true,
 },
 {
-  id: "acompanamiento-colombiana-1l",
-  name: "Colombiana 1l",
+  id: "acompanamiento-quatro-1l",
+  name: "Quatro 1.5l",
   category: "acompanamientos",
-  description: "Refresco de Colombiana de 1.",
-  price: 8000,
-  image: colombianaImage,
+  description: "Refresco de Quatro de 1.5l",
+  price: 10000,
+  image: quatro15,
   featured: true,
   available: true,
 },

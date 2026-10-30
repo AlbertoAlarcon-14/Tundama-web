@@ -1,3 +1,4 @@
+
 import {
   createContext,
   useCallback,
@@ -7,12 +8,21 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { products, type Product, type ProductSize } from "@/data/products";
+import {
+  products,
+  type Product,
+  type ProductSize,
+} from "@/data/products";
 import { addons, type Addon } from "@/data/addons";
 
 export interface SelectedAddon {
   id: string;
   quantity: number;
+}
+
+export interface SelectedFlavors {
+  firstFlavorId: string;
+  secondFlavorId: string;
 }
 
 export interface CartLine {
@@ -21,6 +31,7 @@ export interface CartLine {
   sizeName?: string;
   quantity: number;
   addons?: SelectedAddon[];
+  selectedFlavors?: SelectedFlavors;
 }
 
 interface CartItem extends CartLine {
@@ -30,6 +41,8 @@ interface CartItem extends CartLine {
     addon: Addon;
     quantity: number;
   }[];
+  firstFlavor?: Product;
+  secondFlavor?: Product;
   unitPrice: number;
   addonsTotal: number;
   subtotal: number;
@@ -45,13 +58,14 @@ interface CartContextValue {
     quantity?: number,
     size?: ProductSize,
     selectedAddons?: SelectedAddon[],
+    selectedFlavors?: SelectedFlavors,
   ) => void;
   setQuantity: (id: string, quantity: number) => void;
   remove: (id: string) => void;
   clear: () => void;
 }
 
-const STORAGE_KEY = "tundama-cart-v3";
+const STORAGE_KEY = "tundama-cart-v4";
 
 const CartContext = createContext<CartContextValue | null>(null);
 
@@ -67,24 +81,30 @@ function addonsKey(addonsList: SelectedAddon[] = []) {
     .join("|");
 }
 
+function flavorsKey(flavors?: SelectedFlavors) {
+  if (!flavors) return "no-flavors";
+
+  return `${flavors.firstFlavorId}:${flavors.secondFlavorId}`;
+}
+
 function lineId(
   productId: string,
   sizeName?: string,
   selectedAddons: SelectedAddon[] = [],
+  selectedFlavors?: SelectedFlavors,
 ) {
   const sizeKey = sizeName ?? "default";
   const addonsKeyValue = addonsKey(selectedAddons);
+  const flavorKeyValue = flavorsKey(selectedFlavors);
 
-  return `${productId}__${sizeKey}__${addonsKeyValue || "no-addons"}`;
+  return `${productId}__${sizeKey}__${addonsKeyValue || "no-addons"}__${flavorKeyValue}`;
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
-  /*
-   * Recuperar carrito guardado
-   */
+  // Recuperar carrito guardado
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -105,41 +125,49 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch {
-      /* carrito ilegible: se empieza vacío */
+      // Carrito ilegible: se empieza vacío.
     }
 
     setHydrated(true);
   }, []);
 
-  /*
-   * Guardar carrito
-   */
+  // Guardar carrito
   useEffect(() => {
     if (!hydrated) return;
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
     } catch {
-      /* almacenamiento no disponible */
+      // Almacenamiento no disponible.
     }
   }, [lines, hydrated]);
 
-  /*
-   * Agregar producto
-   */
+  // Agregar producto
   const add = useCallback(
     (
       product: Product,
       quantity = 1,
       size?: ProductSize,
       selectedAddons: SelectedAddon[] = [],
+      selectedFlavors?: SelectedFlavors,
     ) => {
       const cleanAddons = normalizeAddons(selectedAddons);
+
+      const cleanFlavors =
+        product.category === "pizzas" &&
+        size?.name === "Mediana 32cm" &&
+        selectedFlavors?.firstFlavorId &&
+        selectedFlavors?.secondFlavorId &&
+        selectedFlavors.firstFlavorId !==
+          selectedFlavors.secondFlavorId
+          ? selectedFlavors
+          : undefined;
 
       const id = lineId(
         product.id,
         size?.name,
         cleanAddons,
+        cleanFlavors,
       );
 
       setLines((prev) => {
@@ -164,6 +192,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             sizeName: size?.name,
             quantity,
             addons: cleanAddons,
+            selectedFlavors: cleanFlavors,
           },
         ];
       });
@@ -171,9 +200,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  /*
-   * Cambiar cantidad del producto
-   */
+  // Cambiar cantidad del producto
   const setQuantity = useCallback(
     (id: string, quantity: number) => {
       setLines((prev) =>
@@ -192,25 +219,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  /*
-   * Eliminar línea completa
-   */
+  // Eliminar línea completa
   const remove = useCallback((id: string) => {
     setLines((prev) =>
       prev.filter((line) => line.id !== id),
     );
   }, []);
 
-  /*
-   * Vaciar carrito
-   */
+  // Vaciar carrito
   const clear = useCallback(() => {
     setLines([]);
   }, []);
 
-  /*
-   * Construir información completa del carrito
-   */
+  // Construir información completa del carrito
   const items = useMemo(
     () =>
       lines
@@ -227,8 +248,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
               )
             : undefined;
 
-          const unitPrice =
-            size?.price ?? product.price;
+          const unitPrice = size?.price ?? product.price;
 
           const selectedAddons = (line.addons ?? [])
             .map((selectedAddon) => {
@@ -252,6 +272,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
               } => item !== null,
             );
 
+          const firstFlavor = line.selectedFlavors
+            ? products.find(
+                (item) =>
+                  item.id === line.selectedFlavors?.firstFlavorId,
+              )
+            : undefined;
+
+          const secondFlavor = line.selectedFlavors
+            ? products.find(
+                (item) =>
+                  item.id === line.selectedFlavors?.secondFlavorId,
+              )
+            : undefined;
+
           const addonsTotal = selectedAddons.reduce(
             (total, selectedAddon) =>
               total +
@@ -260,17 +294,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
             0,
           );
 
-          const itemUnitPrice =
-            unitPrice + addonsTotal;
-
-          const subtotal =
-            itemUnitPrice * line.quantity;
+          const itemUnitPrice = unitPrice + addonsTotal;
+          const subtotal = itemUnitPrice * line.quantity;
 
           return {
             ...line,
             product,
             size,
             selectedAddons,
+            firstFlavor,
+            secondFlavor,
             unitPrice,
             addonsTotal,
             subtotal,
