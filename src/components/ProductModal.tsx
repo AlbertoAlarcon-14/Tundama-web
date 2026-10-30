@@ -45,37 +45,41 @@ export function ProductModal({
   const [selectedAddons, setSelectedAddons] =
     useState<SelectedAddon[]>([]);
 
-  const [firstFlavor, setFirstFlavor] =
-    useState<Product | null>(null);
-
   const [secondFlavor, setSecondFlavor] =
     useState<Product | null>(null);
 
+  const [combineFlavors, setCombineFlavors] =
+    useState(false);
+
+  const availablePizzas = useMemo(
+    () =>
+      products.filter(
+        (item) =>
+          item.category === "pizzas" &&
+          item.available,
+      ),
+    [],
+  );
+
+  // Reiniciar las opciones cuando se abre otro producto
   useEffect(() => {
     setQuantity(1);
     setSelectedSize(product?.sizes?.[0] ?? null);
     setSelectedAddons([]);
+    setCombineFlavors(false);
 
     if (product?.category === "pizzas") {
-      const availablePizzas = products.filter(
-        (item) =>
-          item.category === "pizzas" &&
-          item.available,
-      );
-
-      setFirstFlavor(product);
-
       setSecondFlavor(
         availablePizzas.find(
           (item) => item.id !== product.id,
         ) ?? null,
       );
     } else {
-      setFirstFlavor(null);
       setSecondFlavor(null);
     }
-  }, [product]);
+  }, [product, availablePizzas]);
 
+  // Cerrar con Escape
   useEffect(() => {
     if (!product) return;
 
@@ -94,6 +98,7 @@ export function ProductModal({
     };
   }, [product, onClose]);
 
+  // Obtener adicionales disponibles
   const productAddons = useMemo(() => {
     if (!product?.addonIds?.length) {
       return [];
@@ -118,15 +123,11 @@ export function ProductModal({
     isPizza &&
     selectedSize?.name === "Mediana 32cm";
 
-  const availablePizzas = products.filter(
-    (item) =>
-      item.category === "pizzas" &&
-      item.available,
-  );
-
+  // Precio base
   const finalPrice =
     selectedSize?.price ?? product.price;
 
+  // Calcular adicionales
   const addonsTotal = selectedAddons.reduce(
     (total, selectedAddon) => {
       const addon = addons.find(
@@ -148,13 +149,15 @@ export function ProductModal({
   const unitTotal = finalPrice + addonsTotal;
   const totalPrice = unitTotal * quantity;
 
+  // Validar si se puede agregar
   const canAdd =
     (!hasSizes || selectedSize !== null) &&
     (!isMediumPizza ||
-      (!!firstFlavor &&
-        !!secondFlavor &&
-        firstFlavor.id !== secondFlavor.id));
+      !combineFlavors ||
+      (!!secondFlavor &&
+        secondFlavor.id !== product.id));
 
+  // Consultar cantidad de un adicional
   function getAddonQuantity(addonId: string) {
     return (
       selectedAddons.find(
@@ -163,6 +166,7 @@ export function ProductModal({
     );
   }
 
+  // Modificar cantidad de adicionales
   function updateAddonQuantity(
     addonId: string,
     change: number,
@@ -300,80 +304,133 @@ export function ProductModal({
             </p>
           )}
 
-          {/* Sabores para pizza mediana */}
+          {/* Modalidad de sabores para pizza mediana */}
           {isMediumPizza && (
             <fieldset className="space-y-3">
               <legend className="font-display text-xl tracking-wide">
-                Elige los dos sabores
+                ¿Cómo quieres tu pizza?
               </legend>
 
               <p className="text-sm text-muted-foreground">
-                Combina dos pizzas diferentes en una sola
-                mediana, sin costo adicional.
+                Puedes pedirla completa de un solo sabor
+                o combinar dos sabores diferentes.
               </p>
 
-              <div className="space-y-2">
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">
-                    Primer sabor
+              {/* Pizza completa */}
+              <label
+                className={`flex cursor-pointer items-center gap-3 rounded-md border p-3 transition-colors ${
+                  !combineFlavors
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-surface-2"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={`pizza-flavors-${product.id}`}
+                  checked={!combineFlavors}
+                  onChange={() =>
+                    setCombineFlavors(false)
+                  }
+                  className="h-4 w-4 accent-[var(--primary)]"
+                />
+
+                <div>
+                  <span className="block font-semibold">
+                    Pizza completa
                   </span>
 
-                  <select
-                    value={firstFlavor?.id ?? ""}
-                    onChange={(e) =>
-                      setFirstFlavor(
-                        availablePizzas.find(
-                          (item) =>
-                            item.id === e.target.value,
-                        ) ?? null,
-                      )
-                    }
-                    className="w-full rounded-md border border-border bg-surface-2 p-3"
-                  >
-                    {availablePizzas.map((flavor) => (
-                      <option
-                        key={flavor.id}
-                        value={flavor.id}
-                      >
-                        {flavor.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  <span className="text-sm text-muted-foreground">
+                    {product.name} en toda la pizza.
+                  </span>
+                </div>
+              </label>
 
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium">
-                    Segundo sabor
+              {/* Pizza de dos sabores */}
+              <label
+                className={`flex cursor-pointer items-center gap-3 rounded-md border p-3 transition-colors ${
+                  combineFlavors
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-surface-2"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={`pizza-flavors-${product.id}`}
+                  checked={combineFlavors}
+                  onChange={() =>
+                    setCombineFlavors(true)
+                  }
+                  className="h-4 w-4 accent-[var(--primary)]"
+                />
+
+                <div>
+                  <span className="block font-semibold">
+                    Pizza de dos sabores
                   </span>
 
-                  <select
-                    value={secondFlavor?.id ?? ""}
-                    onChange={(e) =>
-                      setSecondFlavor(
-                        availablePizzas.find(
-                          (item) =>
-                            item.id === e.target.value,
-                        ) ?? null,
-                      )
-                    }
-                    className="w-full rounded-md border border-border bg-surface-2 p-3"
-                  >
-                    {availablePizzas
-                      .filter(
-                        (item) =>
-                          item.id !== firstFlavor?.id,
-                      )
-                      .map((flavor) => (
-                        <option
-                          key={flavor.id}
-                          value={flavor.id}
-                        >
-                          {flavor.name}
-                        </option>
-                      ))}
-                  </select>
-                </label>
-              </div>
+                  <span className="text-sm text-muted-foreground">
+                    Combina dos pizzas diferentes en una sola.
+                  </span>
+                </div>
+              </label>
+
+              {/* Selector del segundo sabor */}
+              {combineFlavors && (
+                <div className="space-y-3 rounded-md border border-border bg-surface-2 p-3">
+                  <div>
+                    <span className="block text-sm font-medium">
+                      Primera mitad
+                    </span>
+
+                    <div className="mt-2 flex items-center justify-between rounded-md border border-primary bg-primary/10 p-3">
+                      <span className="font-semibold">
+                        {product.name}
+                      </span>
+
+                      <span className="text-xs font-bold uppercase text-primary">
+                        Seleccionado
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      htmlFor={`second-flavor-${product.id}`}
+                      className="block text-sm font-medium"
+                    >
+                      Segunda mitad
+                    </label>
+
+                    <select
+                      id={`second-flavor-${product.id}`}
+                      value={secondFlavor?.id ?? ""}
+                      onChange={(e) =>
+                        setSecondFlavor(
+                          availablePizzas.find(
+                            (item) =>
+                              item.id === e.target.value &&
+                              item.id !== product.id,
+                          ) ?? null,
+                        )
+                      }
+                      className="w-full rounded-md border border-border bg-background p-3"
+                    >
+                      {availablePizzas
+                        .filter(
+                          (item) => item.id !== product.id,
+                        )
+                        .map((flavor) => (
+                          <option
+                            key={flavor.id}
+                            value={flavor.id}
+                          >
+                            {flavor.name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+              )}
             </fieldset>
           )}
 
@@ -541,9 +598,9 @@ export function ProductModal({
                   quantity,
                   selectedSize ?? undefined,
                   selectedAddons,
-                  isMediumPizza
+                  isMediumPizza && combineFlavors
                     ? {
-                        firstFlavorId: firstFlavor?.id ?? "",
+                        firstFlavorId: product.id,
                         secondFlavorId: secondFlavor?.id ?? "",
                       }
                     : undefined,

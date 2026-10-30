@@ -1,3 +1,4 @@
+
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { SectionHeading } from "@/components/SectionHeading";
@@ -77,14 +78,12 @@ function MenuPage() {
 
   const { add } = useCart();
 
-  const [selected, setSelected] =
-    useState<Product | null>(null);
+  const [selected, setSelected] = useState<Product | null>(null);
 
   const visible = products.filter(
     (p) =>
       p.available &&
-      (categoria === "todos" ||
-        p.category === categoria),
+      (categoria === "todos" || p.category === categoria),
   );
 
   const tabs: {
@@ -101,12 +100,6 @@ function MenuPage() {
     })),
   ];
 
-  /*
-   * Todos los productos pasan por el modal.
-   *
-   * Esto es importante porque ahora cualquier producto
-   * puede tener adicionales.
-   */
   function handleAdd(product: Product) {
     setSelected(product);
   }
@@ -186,12 +179,14 @@ function MenuPage() {
           quantity,
           size,
           selectedAddons,
+          selectedFlavors,
         ) =>
           add(
             product,
             quantity,
             size,
             selectedAddons,
+            selectedFlavors,
           )
         }
       />

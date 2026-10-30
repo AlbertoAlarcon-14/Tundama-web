@@ -37,6 +37,8 @@ import pizzaCiruelaTocinetaImage from "../assets/pizzas/ciruelatocineta.jpeg"
 import pizzaPolloChampiñonesImage from "../assets/pizzas/pollochampiñones.jpeg"
 import pizzaMexicanaImage from "../assets/pizzas/mexicana.jpeg"
 import pizzaCarnesImage from "../assets/pizzas/carnes.jpeg"
+import pizzaTropicalImage from "../assets/pizzas/tropical.jpeg"
+import pizzaTresQuesosImage from "../assets/pizzas/tresquesos.jpeg"
 
 import sushiEbyTempuraImage from "../assets/sushi/ebytempura.jpeg"
 import sushiCamaronImage from "../assets/sushi/camaronroll.jpeg"
@@ -77,7 +79,6 @@ import comboSushitripleImage from "../assets/combos/tripleespecial.png"
 import aroscebollaImage from "../assets/acompañamientos/aroscebolla.jpeg"
 import dedosdequesoImage from "../assets/acompañamientos/dedosdequeso.jpeg"
 import palmitosImage from "../assets/acompañamientos/palmitosapanados.jpeg"
-import bretañaImage from "../assets/acompañamientos/bretaña.jpeg"
 import coca400Image from "../assets/acompañamientos/coca400.jpeg"
 import coca1500Image from "../assets/acompañamientos/coca1.5.webp"
 import quatroImage from "../assets/acompañamientos/quatro.jpeg"
@@ -469,7 +470,7 @@ export const products: Product[] = [
     "tocineta",
     "queso",
   ],
-  image: pizzaPepperoniImage,
+  image: pizzaTresQuesosImage,
   featured: true,
   available: true,
 },
@@ -500,7 +501,7 @@ export const products: Product[] = [
     "tocineta",
     "queso",
   ],
-  image: pizzaPepperoniImage,
+  image: pizzaTropicalImage,
   featured: true,
   available: true,
 },
