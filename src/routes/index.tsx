@@ -51,7 +51,7 @@ function Index() {
             alt="Selección de hamburguesas, BBQ, hot dogs y sushi de Tundama Food Barbecue"
             width={1600}
             height={1200}
-            className="h-full w-full object-cover opacity-45"
+            className="h-full w-full object-cover opacity-150"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/85 to-background/55" />
         </div>
