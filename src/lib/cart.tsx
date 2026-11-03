@@ -100,6 +100,27 @@ function lineId(
   return `${productId}__${sizeKey}__${addonsKeyValue || "no-addons"}__${flavorKeyValue}`;
 }
 
+function getFlavorPrice(
+  flavor: Product | undefined,
+  sizeName?: string,
+): number | undefined {
+  if (!flavor) return undefined;
+
+  const flavorSize = flavor.sizes?.find(
+    (item) => item.name === sizeName,
+  );
+
+  if (flavorSize) {
+    return flavorSize.price;
+  }
+
+  if (!flavor.sizes?.length) {
+    return flavor.price;
+  }
+
+  return undefined;
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -248,7 +269,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
               )
             : undefined;
 
-          const unitPrice = size?.price ?? product.price;
+          const originalUnitPrice = size?.price ?? product.price;
 
           const selectedAddons = (line.addons ?? [])
             .map((selectedAddon) => {
@@ -286,6 +307,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
               )
             : undefined;
 
+          // Precio base de la pizza
+          let unitPrice = originalUnitPrice;
+
+          // Si es una mediana combinada, se promedian los sabores
+          if (
+            product.category === "pizzas" &&
+            line.sizeName === "Mediana 32cm" &&
+            firstFlavor &&
+            secondFlavor &&
+            firstFlavor.id !== secondFlavor.id
+          ) {
+            const firstFlavorPrice = getFlavorPrice(
+              firstFlavor,
+              line.sizeName,
+            );
+
+            const secondFlavorPrice = getFlavorPrice(
+              secondFlavor,
+              line.sizeName,
+            );
+
+            if (
+              firstFlavorPrice !== undefined &&
+              secondFlavorPrice !== undefined
+            ) {
+              unitPrice =
+                (firstFlavorPrice + secondFlavorPrice) / 2;
+            }
+          }
+
+          // Calcular valor de adicionales
           const addonsTotal = selectedAddons.reduce(
             (total, selectedAddon) =>
               total +
@@ -294,7 +346,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
             0,
           );
 
+          // Precio unitario final con adicionales
           const itemUnitPrice = unitPrice + addonsTotal;
+
+          // Subtotal según cantidad
           const subtotal = itemUnitPrice * line.quantity;
 
           return {

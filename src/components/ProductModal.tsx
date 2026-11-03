@@ -123,9 +123,29 @@ export function ProductModal({
     isPizza &&
     selectedSize?.name === "Mediana 32cm";
 
-  // Precio base
-  const finalPrice =
+  // Obtener el precio de un sabor según el tamaño seleccionado
+  const getFlavorPrice = (flavor: Product) => {
+    const flavorSize = flavor.sizes?.find(
+      (size) => size.name === selectedSize?.name,
+    );
+
+    return flavorSize?.price ?? flavor.price;
+  };
+
+  // Precio original de la pizza seleccionada
+  const originalPrice =
     selectedSize?.price ?? product.price;
+
+  // Precio dinámico de la pizza
+  const finalPrice =
+    isMediumPizza &&
+    combineFlavors &&
+    secondFlavor
+      ? (
+          getFlavorPrice(product) +
+          getFlavorPrice(secondFlavor)
+        ) / 2
+      : originalPrice;
 
   // Calcular adicionales
   const addonsTotal = selectedAddons.reduce(
@@ -374,25 +394,35 @@ export function ProductModal({
                 </div>
               </label>
 
-              {/* Selector del segundo sabor */}
+              {/* Selector de los dos sabores */}
               {combineFlavors && (
                 <div className="space-y-3 rounded-md border border-border bg-surface-2 p-3">
+                  {/* Primera mitad */}
                   <div>
                     <span className="block text-sm font-medium">
                       Primera mitad
                     </span>
 
-                    <div className="mt-2 flex items-center justify-between rounded-md border border-primary bg-primary/10 p-3">
-                      <span className="font-semibold">
-                        {product.name}
-                      </span>
+                    <div className="mt-2 flex items-center justify-between gap-3 rounded-md border border-primary bg-primary/10 p-3">
+                      <div>
+                        <span className="block font-semibold">
+                          {product.name}
+                        </span>
 
-                      <span className="text-xs font-bold uppercase text-primary">
-                        Seleccionado
+                        <span className="text-sm text-muted-foreground">
+                          Primera mitad
+                        </span>
+                      </div>
+
+                      <span className="font-semibold text-primary">
+                        {formatCOP(
+                          getFlavorPrice(product) / 2,
+                        )}
                       </span>
                     </div>
                   </div>
 
+                  {/* Segunda mitad */}
                   <div className="space-y-2">
                     <label
                       htmlFor={`second-flavor-${product.id}`}
@@ -428,7 +458,47 @@ export function ProductModal({
                           </option>
                         ))}
                     </select>
+
+                    {secondFlavor && (
+                      <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-background p-3">
+                        <div>
+                          <span className="block font-semibold">
+                            {secondFlavor.name}
+                          </span>
+
+                          <span className="text-sm text-muted-foreground">
+                            Segunda mitad
+                          </span>
+                        </div>
+
+                        <span className="font-semibold text-primary">
+                          {formatCOP(
+                            getFlavorPrice(secondFlavor) / 2,
+                          )}
+                        </span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Precio de la combinación */}
+                  {secondFlavor && (
+                    <div className="rounded-lg border border-primary bg-primary/10 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-display text-lg">
+                          Precio pizza combinada
+                        </span>
+
+                        <span className="font-display text-2xl text-primary">
+                          {formatCOP(finalPrice)}
+                        </span>
+                      </div>
+
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        ½ {product.name} + ½{" "}
+                        {secondFlavor.name}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </fieldset>
@@ -438,7 +508,9 @@ export function ProductModal({
           {hasSizes && selectedSize && (
             <div className="flex items-center justify-between border-b border-border pb-4">
               <span className="text-sm text-muted-foreground">
-                Precio
+                {isMediumPizza && combineFlavors
+                  ? "Precio pizza combinada"
+                  : "Precio"}
               </span>
 
               <span className="font-display text-2xl text-primary">
